@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -9,8 +11,58 @@ class RegisterPage extends StatefulWidget {
 class RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
 
+  List images = [];
   bool _obscureText = true;
   String _username, _email, _password;
+  int _currentIndex = 0;
+
+
+  @override
+  void initState() {
+    super.initState();
+    images = [];
+  }
+
+  void _getFromGallery(context) async {
+    PickedFile pickedFile = await ImagePicker().getImage(
+      source: ImageSource.camera,
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        File imageFile = File(pickedFile.path);
+        images.add(imageFile);
+      });
+    }
+  }
+
+  void open(BuildContext context, final int index) {
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => GalleryPhotoViewWrapper(
+    //       galleryItems: galleryItems,
+    //       backgroundDecoration: const BoxDecoration(
+    //         color: Colors.black,
+    //       ),
+    //       initialIndex: index,
+    //       scrollDirection: verticalGallery ? Axis.vertical : Axis.horizontal,
+    //     ),
+    //   ),
+    // );
+  }
+
+
+  Widget cancelButton = FlatButton(
+    child: Text("Cancel"),
+    onPressed:  () {},
+  );
+  Widget continueButton = FlatButton(
+    child: Text("Continue"),
+    onPressed:  () {},
+  );
+
 
   Widget _showTitle() {
     return Text(
@@ -37,6 +89,31 @@ class RegisterPageState extends State<RegisterPage> {
               icon: Icon(Icons.face, color: Colors.white))));
   }
 
+  Widget _showFormUploadAction() {
+    return Padding(
+        padding: EdgeInsets.only(top: 20.0),
+        child: Column(children: [
+          RaisedButton(
+            child: Text('Take photo',
+                style: Theme.of(context)
+                    .textTheme
+                    .body1
+                    .copyWith(color: Colors.black)),
+            elevation: 8.0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0))),
+            color: Theme.of(context).primaryColor,
+            onPressed: () {
+              _getFromGallery(context);
+            }
+          ),
+          Text(
+            '5-7 photos required', 
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
+        ]));
+  }
+
   Widget _showFormActions() {
     return Padding(
         padding: EdgeInsets.only(top: 20.0),
@@ -56,6 +133,70 @@ class RegisterPageState extends State<RegisterPage> {
               child: Text('Existing user? Login'),
               onPressed: () => Navigator.pushReplacementNamed(context, '/login'))
         ]));
+  }
+
+  Widget _showGalleryUploadedPhoto(context) {
+    List<Widget> list = List<Widget>();
+    TextEditingController _controller = TextEditingController();
+
+    for (var i = 0; i < images.length; i++) {
+      list.add(
+        Container(
+          padding: const EdgeInsets.all(0),
+          child: Stack(
+            children: [
+              Image.file(
+                images[i],
+                height: 180.0,
+                fit: BoxFit.cover,
+              ),
+              Positioned(
+                top: -5.0,
+                right: -5.0,
+                child: Padding(
+                  padding: const EdgeInsets.all(0),
+                  child: new IconButton(
+                    icon: Icon(
+                      Icons.remove_circle_outline, 
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    onPressed: () {
+                     showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Setting String'),
+                            content: Text('Setting String'),
+                            actions: <Widget>[
+                              FlatButton(
+                                child: Text('OK'),
+                                onPressed: () {
+                                  print('index: $i');
+                                  Navigator.pop(context);
+                                },
+                              )
+                            ],
+                          );
+                        },
+                      );
+                    }),
+                ),
+              )
+            ],
+          ) 
+        )
+      );
+    }
+
+    return GridView.count(
+      primary: false,
+      padding: const EdgeInsets.all(10),
+      shrinkWrap: true,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      crossAxisCount: 2,
+      children: list
+    );
   }
 
   void _submit() {
@@ -82,18 +223,15 @@ class RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    AlertDialog alert = AlertDialog(
+      title: Text('Delete photo'),
+      content: Text('Would you like to delete photo ?'),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
     return Scaffold(
-        // appBar: AppBar(
-        //   leading: BackButton(
-        //     color: Colors.white
-        //   ),
-        //   title: Text(
-        //     'Sign Up',
-        //     style: TextStyle(
-        //         color: Colors.white
-        //     )
-        //   )
-        // ),
         body: Container(
           decoration: BoxDecoration(color: Colors.black),
           padding: EdgeInsets.symmetric(horizontal: 20.0),
@@ -104,6 +242,9 @@ class RegisterPageState extends State<RegisterPage> {
                       child: Column(children: [
             _showTitle(),
             _showUsernameInput(),
+            _showFormUploadAction(),
+            _showGalleryUploadedPhoto(context)
           ]))))));
   }
 }
+

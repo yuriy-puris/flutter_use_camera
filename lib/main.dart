@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     Timer(
-        Duration(seconds: 3),
+        Duration(seconds: 4),
             () => {
             // Navigator.pushNamed(context, '/home')
           Navigator.of(context).pushAndRemoveUntil<dynamic>(
@@ -54,9 +54,9 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      body: new Center(
-        child: Container(
-          margin: EdgeInsets.all(16.0),
+      body: Container(
+        decoration: BoxDecoration(color: Colors.black),
+        child: Center(
           child: SizedBox(
             width: 250.0,
             child: TypewriterAnimatedTextKit(
@@ -66,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 "Itera Research",
               ],
               textStyle: TextStyle(
-                  color: Colors.red[600],
+                  color: Colors.white,
                   fontSize: 35.0,
                   fontFamily: "Agne"
               ),
