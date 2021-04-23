@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-
+import 'package:flutter_use_camera/components/check_face_dialog.dart';
 class RegisterPage extends StatefulWidget {
   @override
   RegisterPageState createState() => RegisterPageState();
@@ -10,11 +10,14 @@ class RegisterPage extends StatefulWidget {
 
 class RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-
   List images = [];
   bool _obscureText = true;
   String _username, _email, _password;
   int _currentIndex = 0;
+
+  String _confidenceModel = '';
+  String _nameModel = '';
+  String numbersModel = '';
 
 
   @override
@@ -23,13 +26,23 @@ class RegisterPageState extends State<RegisterPage> {
     images = [];
   }
 
-  void _getFromGallery(context) async {
+  _getFromGallery(context) async {
     PickedFile pickedFile = await ImagePicker().getImage(
       source: ImageSource.camera,
       maxWidth: 1800,
       maxHeight: 1800,
     );
     if (pickedFile != null) {
+      var isValid = await showDialog(
+        context: context,
+        builder: (_) => CheckFaceDialog(
+          title: 'Checking the photo ...',
+          description: '',
+          text: 'Ok',
+          imgPth: pickedFile.path
+        )
+      );
+      print('valid: $isValid');
       setState(() {
         File imageFile = File(pickedFile.path);
         images.add(imageFile);
@@ -137,53 +150,73 @@ class RegisterPageState extends State<RegisterPage> {
 
   Widget _showGalleryUploadedPhoto(context) {
     List<Widget> list = List<Widget>();
-    TextEditingController _controller = TextEditingController();
 
     for (var i = 0; i < images.length; i++) {
       list.add(
         Container(
           padding: const EdgeInsets.all(0),
-          child: Stack(
-            children: [
-              Image.file(
-                images[i],
-                height: 180.0,
-                fit: BoxFit.cover,
-              ),
-              Positioned(
-                top: -5.0,
-                right: -5.0,
-                child: Padding(
-                  padding: const EdgeInsets.all(0),
-                  child: new IconButton(
-                    icon: Icon(
-                      Icons.remove_circle_outline, 
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    onPressed: () {
-                     showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text('Setting String'),
-                            content: Text('Setting String'),
-                            actions: <Widget>[
-                              FlatButton(
-                                child: Text('OK'),
-                                onPressed: () {
-                                  print('index: $i');
-                                  Navigator.pop(context);
-                                },
-                              )
-                            ],
-                          );
-                        },
-                      );
-                    }),
+          child: AnimatedContainer(
+            // Use the properties stored in the State class.
+            width: 200.0,
+            height: 200.0,
+            decoration: BoxDecoration(
+              color: Colors.red,
+            ),
+            // Define how long the animation should take.
+            duration: Duration(seconds: 1),
+            // Provide an optional curve to make the animation feel smoother.
+            curve: Curves.fastOutSlowIn,
+            child: Stack(
+              children: [
+                Image.file(
+                  images[i],
+                  height: 180.0,
+                  fit: BoxFit.cover,
                 ),
-              )
-            ],
-          ) 
+              ]
+            )
+          ),
+          // child: Stack(
+          //   children: [
+          //     Image.file(
+          //       images[i],
+          //       height: 180.0,
+          //       fit: BoxFit.cover,
+          //     ),
+          //     Positioned(
+          //       top: -5.0,
+          //       right: -5.0,
+          //       child: Padding(
+          //         padding: const EdgeInsets.all(0),
+          //         child: new IconButton(
+          //           icon: Icon(
+          //             Icons.remove_circle_outline, 
+          //             color: Theme.of(context).primaryColor,
+          //           ),
+          //           onPressed: () {
+          //            showDialog(
+          //               context: context,
+          //               builder: (BuildContext context) {
+          //                 return AlertDialog(
+          //                   title: Text('Setting String'),
+          //                   content: Text('Setting String'),
+          //                   actions: <Widget>[
+          //                     FlatButton(
+          //                       child: Text('OK'),
+          //                       onPressed: () {
+          //                         print('index: $i');
+          //                         Navigator.pop(context);
+          //                       },
+          //                     )
+          //                   ],
+          //                 );
+          //               },
+          //             );
+          //           }),
+          //       ),
+          //     )
+          //   ],
+          // )
         )
       );
     }
@@ -247,4 +280,3 @@ class RegisterPageState extends State<RegisterPage> {
           ]))))));
   }
 }
-
