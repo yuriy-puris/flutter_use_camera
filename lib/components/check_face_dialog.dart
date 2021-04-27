@@ -1,15 +1,16 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tflite/tflite.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 
 
 class CheckFaceDialog extends StatefulWidget {
   final String title, description, text;
   final String imgPth;
 
-  static const double padding = 20;
+  static const double padding = 10;
   static const double avatarRadius = 45;
 
   CheckFaceDialog({ Key key, this.title, this.description, this.text, this.imgPth }) : super(key: key);
@@ -25,24 +26,19 @@ class _CheckFaceDialogState extends State<CheckFaceDialog> {
   String _confidenceModel = '';
   String _nameModel = '';
   String numbersModel = '';
-
   bool isValidPhoto = false;
 
-  static const String correctResultName = 'Face Detection';
+  List<Face> _faces;
+  ui.Image _image;
+  List<Map<String, int>> faceMaps = [];
+
+  static const String correctResultName = 'Real Face';
   static const double correctResultConfidence = 50;
 
 
   @override
   void initState() {
     super.initState();
-    loadModel();
-  }
-
-  loadModel() async {
-    isProcessing = true;
-    var resultLoad = await Tflite.loadModel(
-        labels: 'assets/labels.txt', model: 'assets/model_unquant.tflite');
-    print('result: $resultLoad');
     applyModelOnImage(widget.imgPth);
   }
 
@@ -57,19 +53,28 @@ class _CheckFaceDialogState extends State<CheckFaceDialog> {
 
     setState(() {
       _resultModel = resultRun;
+      print('$resultRun');
       String str = _resultModel[0]['label'];
       _nameModel = str.substring(2);
       _confidence = _resultModel != null ? (_resultModel[0]['confidence'] * 100.0) : 0;
       _confidenceModel = _resultModel != null
           ? (_resultModel[0]['confidence'] * 100.0).toString().substring(0, 2) + '%'
           : '';
-      print('$_nameModel, $_confidenceModel');
+
       if (_nameModel == correctResultName && _confidence > correctResultConfidence) {
         isValidPhoto = true;
       } else {
         isValidPhoto = false;
       }
+
       isProcessing = false;
+      // closePopup(isValidPhoto);
+    });
+  }
+
+  closePopup(bool valid) {
+    Future.delayed(const Duration(milliseconds: 4000), () {
+      Navigator.pop(context, valid);
     });
   }
 
@@ -88,6 +93,7 @@ class _CheckFaceDialogState extends State<CheckFaceDialog> {
     return Stack(
       children: <Widget>[
         Container(
+          width: 300,
           padding: EdgeInsets.only(
             left: CheckFaceDialog.padding,
             top: CheckFaceDialog.avatarRadius + CheckFaceDialog.padding,
@@ -97,7 +103,7 @@ class _CheckFaceDialogState extends State<CheckFaceDialog> {
           margin: EdgeInsets.only(top: CheckFaceDialog.avatarRadius),
           decoration: BoxDecoration(
             shape: BoxShape.rectangle,
-            color: Colors.white,
+            color: Colors.indigo[400],
             borderRadius: BorderRadius.circular(CheckFaceDialog.padding),
             boxShadow: [
               BoxShadow(color: Colors.black,offset: Offset(0,10),
@@ -108,25 +114,33 @@ class _CheckFaceDialogState extends State<CheckFaceDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(widget.title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),),
+              Text(
+                isProcessing ? widget.title : 'Checked photo', 
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20, 
+                  fontWeight: FontWeight.w600
+                ),
+              ),
               SizedBox(height: 15,),
               ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(100)),
                   child: Image.file(
                     File(widget.imgPth),
-                    height: 100.0,
-                    width: 100.0,
+                    height: 120.0,
+                    width: 120.0,
                     fit: BoxFit.cover,
                   ),
               ),
               SizedBox(height: 22,),
+              Text(isValidPhoto ? 'Real Face' : 'Fake Face', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),),
               Align(
                 alignment: Alignment.center,
                 child: FlatButton(
                     onPressed: () {
-                      Navigator.pop(context, 'success');
+                      Navigator.pop(context, true);
                     },
-                    child: Text(widget.text, style: TextStyle(fontSize: 18),)),
+                    child: Text(widget.text, style: TextStyle(color: Colors.white, fontSize: 18),)),
               ),
             ],
           ),
@@ -135,22 +149,22 @@ class _CheckFaceDialogState extends State<CheckFaceDialog> {
           left: CheckFaceDialog.padding,
             right: CheckFaceDialog.padding,
             child: CircleAvatar(
-              backgroundColor: Colors.white,
+              backgroundColor: Colors.indigo[400],
               radius: CheckFaceDialog.avatarRadius,
               child: ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(CheckFaceDialog.avatarRadius)),
                   child: isProcessing
                     ? Center(child: CircularProgressIndicator())
-                    : _confidence > 50
+                    : isValidPhoto
                     ? Icon(
                         Icons.check_circle_outline,
                         color: Colors.green,
-                        size: 20,
+                        size: 50,
                       )
                     : Icon(
                         Icons.cancel_outlined,
                         color: Colors.red,
-                        size: 20,
+                        size: 50,
                       )
               ),
             ),

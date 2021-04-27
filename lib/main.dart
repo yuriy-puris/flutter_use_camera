@@ -6,10 +6,18 @@ import 'package:flutter_use_camera/model/user.dart';
 import 'package:flutter_use_camera/components/user.dart';
 import 'package:flutter_use_camera/pages/home_page.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+// import 'package:firebase_core/firebase_core.dart';
+
 
 void main() {
   runApp(MyApp());
 }
+
+// Future<void> main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp();
+//   runApp(MyApp());
+// }
 
 class MyApp extends StatelessWidget {
   @override
@@ -55,7 +63,16 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return new Scaffold(
       body: Container(
-        decoration: BoxDecoration(color: Colors.black),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.deepPurple[900],
+              Colors.black,
+            ],
+          )
+        ),
         child: Center(
           child: SizedBox(
             width: 250.0,

@@ -1,2 +1,2 @@
-0 Face Detection
-1 Fake Face
+0 Fake Face
+1 Real Face

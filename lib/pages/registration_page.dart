@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:tflite/tflite.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_use_camera/components/check_face_dialog.dart';
@@ -15,6 +16,9 @@ class RegisterPageState extends State<RegisterPage> {
   String _username, _email, _password;
   int _currentIndex = 0;
 
+  int needUploadPhoto = 5;
+  int leastCountPhoto = 5;
+
   String _confidenceModel = '';
   String _nameModel = '';
   String numbersModel = '';
@@ -24,6 +28,13 @@ class RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
     images = [];
+    loadModel();
+  }
+
+  loadModel() async {
+    var resultLoad = await Tflite.loadModel(
+        labels: 'assets/labels.txt', model: 'assets/model_unquant.tflite');
+    print('result: $resultLoad');
   }
 
   _getFromGallery(context) async {
@@ -42,12 +53,19 @@ class RegisterPageState extends State<RegisterPage> {
           imgPth: pickedFile.path
         )
       );
-      print('valid: $isValid');
-      setState(() {
-        File imageFile = File(pickedFile.path);
-        images.add(imageFile);
-      });
+      if (isValid) {
+          setState(() {
+            File imageFile = File(pickedFile.path);
+            images.add(imageFile);
+            updateCountPhoto();
+          });
+        }
     }
+  }
+
+  void updateCountPhoto() {
+    print('$leastCountPhoto, $images.length');
+    leastCountPhoto = needUploadPhoto - images.length;
   }
 
   void open(BuildContext context, final int index) {
@@ -89,7 +107,7 @@ class RegisterPageState extends State<RegisterPage> {
         padding: EdgeInsets.only(top: 20.0),
         child: TextFormField(
           onSaved: (val) => _username = val,
-          style: TextStyle(fontSize: 18, color: Colors.white),
+          style: TextStyle(fontSize: 16, color: Colors.white),
           validator: (val) => val.length < 6 ? 'Username too short' : null,
             decoration: InputDecoration(
               enabledBorder: const OutlineInputBorder(
@@ -102,12 +120,39 @@ class RegisterPageState extends State<RegisterPage> {
               icon: Icon(Icons.face, color: Colors.white))));
   }
 
-  Widget _showFormUploadAction() {
+  Widget _showFormPreUploadAction() {
     return Padding(
         padding: EdgeInsets.only(top: 20.0),
         child: Column(children: [
           RaisedButton(
             child: Text('Take photo',
+                style: Theme.of(context)
+                    .textTheme
+                    .body1
+                    .copyWith(color: Colors.white)),
+            elevation: 8.0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10.0))),
+            color: Theme.of(context).primaryColor,
+            onPressed: () {
+              _getFromGallery(context);
+            }
+          ),
+          Container(
+            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            child: Text(
+              'You need to upload $leastCountPhoto photos',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          )
+        ]));
+  }
+
+  Widget _showFormUploadAction() {
+    return Padding(
+      padding: EdgeInsets.only(top: 20.0),
+      child: RaisedButton(
+            child: Text('Upload',
                 style: Theme.of(context)
                     .textTheme
                     .body1
@@ -117,14 +162,10 @@ class RegisterPageState extends State<RegisterPage> {
                 borderRadius: BorderRadius.all(Radius.circular(10.0))),
             color: Theme.of(context).primaryColor,
             onPressed: () {
-              _getFromGallery(context);
+              print('upload to server');
             }
           ),
-          Text(
-            '5-7 photos required', 
-            style: TextStyle(fontSize: 20, color: Colors.white),
-          ),
-        ]));
+    );
   }
 
   Widget _showFormActions() {
@@ -148,7 +189,7 @@ class RegisterPageState extends State<RegisterPage> {
         ]));
   }
 
-  Widget _showGalleryUploadedPhoto(context) {
+  Widget _showGridUploadedPhoto(context) {
     List<Widget> list = List<Widget>();
 
     for (var i = 0; i < images.length; i++) {
@@ -156,11 +197,12 @@ class RegisterPageState extends State<RegisterPage> {
         Container(
           padding: const EdgeInsets.all(0),
           child: AnimatedContainer(
+            alignment: Alignment.center,
             // Use the properties stored in the State class.
-            width: 200.0,
+            // width: 200.0,
             height: 200.0,
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: Colors.black12,
             ),
             // Define how long the animation should take.
             duration: Duration(seconds: 1),
@@ -173,6 +215,47 @@ class RegisterPageState extends State<RegisterPage> {
                   height: 180.0,
                   fit: BoxFit.cover,
                 ),
+                Positioned(
+                  top: -10.0,
+                  right: -10.0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: new IconButton(
+                      icon: Icon(
+                        Icons.remove_circle_outline, 
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Delete photo'),
+                              content: Text('Are you sure you want to delete photo ?'),
+                              actions: <Widget>[
+                                FlatButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                                FlatButton(
+                                  child: Text('OK'),
+                                  onPressed: () {
+                                    setState(() {
+                                      images.removeAt(i);
+                                      updateCountPhoto();
+                                      Navigator.pop(context);
+                                    });
+                                  },
+                                )
+                              ],
+                            );
+                          },
+                        );
+                      }),
+                  ),
+                )
               ]
             )
           ),
@@ -227,7 +310,7 @@ class RegisterPageState extends State<RegisterPage> {
       shrinkWrap: true,
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      crossAxisCount: 2,
+      crossAxisCount: 3,
       children: list
     );
   }
@@ -265,18 +348,35 @@ class RegisterPageState extends State<RegisterPage> {
       ],
     );
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
+        title: Text('Registration', style: TextStyle(color: Colors.white)),
+      ),
         body: Container(
-          decoration: BoxDecoration(color: Colors.black),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.deepPurple[900],
+                Colors.black,
+              ],
+            )
+          ),
+          // decoration: BoxDecoration(color: Colors.black),
           padding: EdgeInsets.symmetric(horizontal: 20.0),
           child: Center(
               child: SingleChildScrollView(
                   child: Form(
                       key: _formKey,
                       child: Column(children: [
-            _showTitle(),
             _showUsernameInput(),
-            _showFormUploadAction(),
-            _showGalleryUploadedPhoto(context)
+            (needUploadPhoto == images.length)
+            ? _showFormUploadAction()
+            : _showFormPreUploadAction(),
+            _showGridUploadedPhoto(context)
           ]))))));
   }
 }
