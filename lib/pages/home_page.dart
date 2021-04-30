@@ -182,7 +182,7 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
     super.initState();
     setState(() {
       _nameController.value = TextEditingValue(text: name);
-      _nameController.value = TextEditingValue(text: position);
+      _positionController.value = TextEditingValue(text: position);
     });
   }
 
@@ -317,7 +317,7 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
                               maxLines: 1,
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w600)),
                             ),
                           Text(
@@ -333,52 +333,78 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
                     ],
                   ),
                   Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: <Widget>[
-                      Center(
-                          child: !isEditing ? InkWell(
-                                  onTap: () async {
-                                    setState(() {
-                                      isEditing = true;
-                                    });
-                                  },
-                                  child: Container(
-                                      alignment: Alignment.center,
-                                      padding: EdgeInsets.all(8.0),
-                                      decoration: BoxDecoration(
-                                        color: Color.fromRGBO(23, 30, 92, 0.6),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.edit_rounded,
-                                        color: Colors.white,
-                                        size: 23,
-                                      )),
-                                )
-                              : InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      if (_formKey.currentState.validate()) {
-                                        isEditing = false;
-                                      }
-                                    });
-                                  },
-                                  child: Container(
-                                      alignment: Alignment.center,
-                                      padding: EdgeInsets.all(8.0),
-                                      decoration: BoxDecoration(
-                                        color: Color.fromRGBO(23, 30, 92, 0.6),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.close_sharp,
-                                        color: Colors.white,
-                                        size: 23,
-                                      )),
-                                )),
-                    ],
-                  ),
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Container(
+                              margin: EdgeInsets.fromLTRB(2, 0, 2, 0),
+                              child: InkWell(
+                                onTap: () async {
+                                  print('noty');
+                                },
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    padding: EdgeInsets.all(5.0),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromRGBO(23, 30, 92, 0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.notification_important,
+                                      color: Colors.white,
+                                      size: 20,
+                                    )),
+                              ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                            child: !isEditing 
+                            ? InkWell(
+                                onTap: () async {
+                                  setState(() {
+                                    isEditing = true;
+                                  });
+                                },
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    padding: EdgeInsets.all(5.0),
+                                    decoration: BoxDecoration(
+                                      color: Color.fromRGBO(23, 30, 92, 0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.edit_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    )),
+                              )
+                            : InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (_formKey.currentState.validate()) {
+                                    isEditing = false;
+                                  }
+                                });
+                              },
+                              child: Container(
+                                  alignment: Alignment.center,
+                                  padding: EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    color: Color.fromRGBO(23, 30, 92, 0.6),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close_sharp,
+                                    color: Colors.white,
+                                    size: 23,
+                                  )),
+                            )),
+                          ],
+                        )
+                      ],
+                    ),
                 ],
               ),
               if (isEditing) Positioned(
