@@ -11,6 +11,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool isVisibleAppBar = false;
+
   @override
   void initState() {
     // Future.delayed(Duration.zero, () {
@@ -28,34 +30,36 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: Colors.transparent,
-          elevation: 0.0,
-          title: Text('Dashboard', style: TextStyle(color: Colors.white)),
-          actions: <Widget>[
-            FlatButton(
-              textColor: Colors.white,
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => RegisterPage()));
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 0, 5, 0),
-                    child: Icon(
-                      Icons.app_registration,
-                      color: Colors.white,
-                    ),
+        appBar: isVisibleAppBar 
+            ? AppBar(
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.transparent,
+              elevation: 0.0,
+              title: Text('Dashboard', style: TextStyle(color: Colors.white)),
+              actions: <Widget>[
+                FlatButton(
+                  textColor: Colors.white,
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => RegisterPage()));
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 0, 5, 0),
+                        child: Icon(
+                          Icons.app_registration,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text('Sign Up')
+                    ],
                   ),
-                  Text('Sign Up')
-                ],
-              ),
-            ),
-          ],
-        ),
+                ),
+              ],
+            )
+            : null,
         body: Container(
           child: LayoutBuilder(builder:
               (BuildContext context, BoxConstraints viewportConstraints) {
@@ -66,7 +70,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: IntrinsicHeight(
                       child: Container(
-                    padding: EdgeInsets.fromLTRB(15, 60, 15, 15),
+                    padding: EdgeInsets.fromLTRB(15, (isVisibleAppBar ? 60 : 10), 15, 15),
                     decoration: BoxDecoration(
                         gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -100,12 +104,22 @@ class TimeBar extends StatefulWidget {
 class _TimeBarState extends State<TimeBar> {
   String _dateString;
   String _timeString;
+  var timer;
 
   @override
   void initState() {
     super.initState();
-    _getTime();
-    Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
+    _runTime();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
+
+  void _runTime() {
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
   }
 
   void _getTime() {
@@ -116,7 +130,6 @@ class _TimeBarState extends State<TimeBar> {
     setState(() {
       _dateString = formattedDate;
       _timeString = formattedTime;
-      print(_timeString);
     });
   }
 
@@ -160,12 +173,17 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
   String avatar = 'Test User';
   bool isEditing = false;
 
-  TextEditingController nameController = TextEditingController();
-  TextEditingController positionController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _positionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    setState(() {
+      _nameController.value = TextEditingValue(text: name);
+      _nameController.value = TextEditingValue(text: position);
+    });
   }
 
   @override
@@ -179,153 +197,218 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
     });
   }
 
+  _formEditing() {
+    return Container(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextFormField(
+              onChanged: (val) {
+                name = val;
+              },
+              controller: _nameController,
+              validator: (value) {
+                return value.isNotEmpty ? null : 'Invalid Field';
+              },
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w300),
+              decoration: InputDecoration(
+                isDense: true,
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.white, width: 1.0),
+                ),
+                hintText: 'Enter username',
+                hintStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w300),
+                  contentPadding: EdgeInsets.fromLTRB(5, 10, 5, 5),
+                  errorStyle: TextStyle(
+                    fontSize: 10,
+                  ),
+              ),
+            ),
+            TextFormField(
+              onChanged: (val) {
+                position = val;
+              },
+              controller: _positionController,
+              validator: (value) {
+                return value.isNotEmpty ? null : 'Invalid Field';
+              },
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w300),
+              decoration: InputDecoration(
+                isDense: true,
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.white, width: 1.0),
+                ),
+                hintText: 'Enter position',
+                hintStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w300),
+                  contentPadding: EdgeInsets.fromLTRB(5, 10, 5, 10),
+                  errorStyle: TextStyle(
+                    fontSize: 10,
+                  ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   void saveUser() {
     setState(() {
       isEditing = false;
-      name = nameController.text;
+      // name = nameController.text;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 90,
+      height: 100,
       padding: EdgeInsets.fromLTRB(10, 15, 10, 15),
-      margin: EdgeInsets.only(bottom: 15.0),
+      margin: EdgeInsets.only(bottom: 50.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(15)),
         color: Color.fromRGBO(68, 15, 192, 1.0),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
+      child: FractionallySizedBox(
+        widthFactor: 1.0,
+        child: Container(
+          child: Stack(
+            overflow: Overflow.visible,
             children: <Widget>[
-              Container(
-                padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                child: CircleAvatar(
-                  radius: 25,
-                  backgroundColor: Colors.indigo[400],
-                ),
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  SizedBox(
-                      width: 200.0,
-                      height: 30,
-                      child: isEditing
-                          ? Container(
-                              margin: EdgeInsets.only(top: 10.0),
-                              child: TextField(
-                                onChanged: (val) {
-                                  name = val;
-                                },
-                                controller: nameController,
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600),
-                                decoration: InputDecoration(
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.white, width: 1.0),
-                                  ),
-                                  hintText: 'Enter your name',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                ),
-                              ),
-                            )
-                          : Container(
-                              child: Text(name,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600)),
-                            )),
-                  SizedBox(
-                    width: 200,
-                    height: 30,
-                    child: isEditing
-                        ? Container(
-                            margin: EdgeInsets.only(top: 10.0),
-                            child: TextField(
-                              onChanged: (val) {
-                                position = val;
-                              },
-                              controller: positionController,
-                              textAlign: TextAlign.left,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                        child: CircleAvatar(
+                          radius: 25,
+                          backgroundColor: Colors.indigo[400],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                            child: Text(
+                              _nameController.text,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w300),
-                              decoration: InputDecoration(
-                                enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Colors.white, width: 1.0),
-                                ),
-                                hintText: 'Enter your position',
-                                hintStyle: TextStyle(color: Colors.grey),
-                              ),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600)),
                             ),
-                          )
-                        : Text(position,
+                          Text(
+                            _positionController.text,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w300)),
-                  )
+                        ],
+                      ),
+                    ],
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      Center(
+                          child: !isEditing ? InkWell(
+                                  onTap: () async {
+                                    setState(() {
+                                      isEditing = true;
+                                    });
+                                  },
+                                  child: Container(
+                                      alignment: Alignment.center,
+                                      padding: EdgeInsets.all(8.0),
+                                      decoration: BoxDecoration(
+                                        color: Color.fromRGBO(23, 30, 92, 0.6),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.edit_rounded,
+                                        color: Colors.white,
+                                        size: 23,
+                                      )),
+                                )
+                              : InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      if (_formKey.currentState.validate()) {
+                                        isEditing = false;
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                      alignment: Alignment.center,
+                                      padding: EdgeInsets.all(8.0),
+                                      decoration: BoxDecoration(
+                                        color: Color.fromRGBO(23, 30, 92, 0.6),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.close_sharp,
+                                        color: Colors.white,
+                                        size: 23,
+                                      )),
+                                )),
+                    ],
+                  ),
                 ],
+              ),
+              if (isEditing) Positioned(
+                top: 0,
+                width: 200,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    width: 200,
+                    padding: EdgeInsets.fromLTRB(15, 5, 15, 15),
+                    decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 5,
+                            blurRadius: 7,
+                            offset: Offset(0, 3), // changes position of shadow
+                          ),
+                        ],
+                        borderRadius: BorderRadius.all(Radius.circular(15)),
+                        color: Color.fromRGBO(68, 15, 192, 1.0),
+                      ),
+                      child: _formEditing()
+                    ),
+                )
               ),
             ],
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              Center(
-                  child: !isEditing
-                      ? InkWell(
-                          onTap: () {
-                            setEditing();
-                          },
-                          child: Container(
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(23, 30, 92, 0.6),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.edit_rounded,
-                                color: Colors.white,
-                                size: 23,
-                              )),
-                        )
-                      : InkWell(
-                          onTap: () {
-                            saveUser();
-                          },
-                          child: Container(
-                              alignment: Alignment.center,
-                              padding: EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                color: Color.fromRGBO(23, 30, 92, 0.6),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close_sharp,
-                                color: Colors.white,
-                                size: 23,
-                              )),
-                        )),
-            ],
-          )
-        ],
-      ),
+        ),
+      )
     );
   }
 }
