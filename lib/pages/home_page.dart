@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'dart:async';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 
 import 'package:flutter_use_camera/pages/registration_page.dart';
+import 'package:flutter_use_camera/pages/history_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -84,6 +87,7 @@ class _HomePageState extends State<HomePage> {
                       children: <Widget>[
                         TimeBar(),
                         ProfileHeadBar(),
+                        HistoryBar(),
                         PurchaseBar.withSampleData(),
                         LatestTransactionsBar(),
                       ],
@@ -168,10 +172,17 @@ class ProfileHeadBar extends StatefulWidget {
 }
 
 class _ProfileHeadBarState extends State<ProfileHeadBar> {
+  
+  bool isEditing = false;
   String name = 'Test User';
   String position = 'Mobile Developer';
   String avatar = 'Test User';
-  bool isEditing = false;
+  PickedFile imageFile;
+  List<NotyItem> listNoty = [
+    const NotyItem('Test noty 1', Icon(Icons.article, color: Colors.white,)),
+    const NotyItem('Test noty 2', Icon(Icons.article, color: Colors.white,)),
+    const NotyItem('Test noty 3', Icon(Icons.article, color: Colors.white,))
+  ];
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController _nameController = TextEditingController();
@@ -268,6 +279,69 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
     );
   }
 
+  _showDialogSelection(BuildContext context) {
+    return showDialog(
+      context: context, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'From where you want to take the photo ?'
+          ),
+          content: SingleChildScrollView(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                TextButton(
+                  style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.blue)
+                  ),
+                  onPressed: () {
+                    _openGallery(context);
+                  },
+                  child: Text('Gallery'),
+                ),
+                TextButton(
+                  style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.blue)
+                  ),
+                  onPressed: () {
+                    _openCamera(context);
+                  },
+                  child: Text('Camera'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
+  void _openGallery(BuildContext context) async {
+    PickedFile pickedFile = await ImagePicker().getImage(
+      source: ImageSource.gallery,
+    );
+    this.setState(() {
+      imageFile = pickedFile;
+    });
+    Navigator.of(context).pop();
+  }
+
+  void _openCamera(BuildContext context) async {
+    PickedFile pickedFile = await ImagePicker().getImage(
+      source: ImageSource.camera,
+      preferredCameraDevice: CameraDevice.values[1],
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    this.setState(() {
+      imageFile = pickedFile;
+    });
+    Navigator.of(context).pop();
+  }
+
   void saveUser() {
     setState(() {
       isEditing = false;
@@ -280,7 +354,7 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
     return Container(
       height: 100,
       padding: EdgeInsets.fromLTRB(10, 15, 10, 15),
-      margin: EdgeInsets.only(bottom: 50.0),
+      margin: EdgeInsets.only(bottom: 35.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.all(Radius.circular(15)),
         color: Color.fromRGBO(68, 15, 192, 1.0),
@@ -299,11 +373,28 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Container(
-                        padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                        child: CircleAvatar(
-                          radius: 25,
-                          backgroundColor: Colors.indigo[400],
+                      InkWell(
+                        onTap: () async {
+                          _showDialogSelection(context);
+                        },
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                          child: ClipOval(
+                            child: imageFile == null
+                                ? CircleAvatar(
+                                  radius: 25,
+                                  backgroundColor: Colors.indigo[400],
+                                )
+                                : CircleAvatar(
+                                  radius: 25,
+                                  child: Image(
+                                    image: FileImage(File(imageFile.path)),
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                          )
                         ),
                       ),
                       Column(
@@ -338,28 +429,58 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            Container(
-                              margin: EdgeInsets.fromLTRB(2, 0, 2, 0),
-                              child: InkWell(
-                                onTap: () async {
-                                  print('noty');
-                                },
-                                child: Container(
-                                    alignment: Alignment.center,
-                                    padding: EdgeInsets.all(5.0),
-                                    decoration: BoxDecoration(
-                                      color: Color.fromRGBO(23, 30, 92, 0.6),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.notification_important,
-                                      color: Colors.white,
-                                      size: 20,
-                                    )),
+                            ConstrainedBox(
+                              constraints: new BoxConstraints(
+                                maxHeight: 40.0,
+                                maxWidth: 40.0,
+                              ),
+                              child: PopupMenuButton(
+                                offset: Offset(-5, 10),
+                                color: Color.fromRGBO(68, 15, 192, 1.0),
+                                icon: Icon(
+                                  Icons.notification_important,
+                                  color: Colors.white,
+                                  size: 25,
+                                ),
+                                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                                  ...listNoty.map((NotyItem noty) {
+                                    return PopupMenuItem(
+                                      height: 40.0,
+                                      child: Container(
+                                        height: 30.0,
+                                        padding: EdgeInsets.fromLTRB(0, 5.0, 0, 5.0),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: <Widget>[
+                                            Container(
+                                              padding: EdgeInsets.fromLTRB(0, 0, 10.0, 5.0),
+                                              child: noty.icon,
+                                            ),
+                                            Container(
+                                              child: Text(
+                                              noty.name,
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                color: Colors.white
+                                              )
+                                            ),
+                                            )
+                                          ],
+                                        )
+                                      )
+                                    );
+                                  })
+                                  // const PopupMenuDivider(),
+                                  // const PopupMenuItem(child: Text('Item A')),
+                                ],
                               ),
                         ),
-                        Container(
-                          margin: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                        ConstrainedBox(
+                          constraints: new BoxConstraints(
+                            maxHeight: 30.0,
+                            maxWidth: 30.0,
+                          ),
                             child: !isEditing 
                             ? InkWell(
                                 onTap: () async {
@@ -369,15 +490,11 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
                                 },
                                 child: Container(
                                     alignment: Alignment.center,
-                                    padding: EdgeInsets.all(5.0),
-                                    decoration: BoxDecoration(
-                                      color: Color.fromRGBO(23, 30, 92, 0.6),
-                                      shape: BoxShape.circle,
-                                    ),
+                                    padding: EdgeInsets.all(2.0),
                                     child: Icon(
                                       Icons.edit_rounded,
                                       color: Colors.white,
-                                      size: 20,
+                                      size: 25,
                                     )),
                               )
                             : InkWell(
@@ -390,15 +507,15 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
                               },
                               child: Container(
                                   alignment: Alignment.center,
-                                  padding: EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: Color.fromRGBO(23, 30, 92, 0.6),
-                                    shape: BoxShape.circle,
-                                  ),
+                                  padding: EdgeInsets.all(2.0),
+                                  // decoration: BoxDecoration(
+                                  //   color: Color.fromRGBO(23, 30, 92, 0.6),
+                                  //   shape: BoxShape.circle,
+                                  // ),
                                   child: Icon(
                                     Icons.close_sharp,
                                     color: Colors.white,
-                                    size: 23,
+                                    size: 25,
                                   )),
                             )),
                           ],
@@ -439,6 +556,11 @@ class _ProfileHeadBarState extends State<ProfileHeadBar> {
   }
 }
 
+class NotyItem {
+  const NotyItem(this.name, this.icon);
+  final String name;
+  final Icon icon;
+}
 class PurchaseBar extends StatelessWidget {
   final List<charts.Series> seriesList;
   final bool animate;
@@ -646,4 +768,45 @@ class Transaction {
   final String price;
 
   Transaction(this.name, this.date, this.price);
+}
+
+
+class HistoryBar extends StatelessWidget {
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 15.0),
+      width: MediaQuery.of(context).size.width,
+      child: FlatButton(
+        color: Color.fromRGBO(68, 15, 192, 1.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 1,
+              child: Text(
+                'History',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15.0,
+                ),
+                textAlign: TextAlign.center
+              ),
+            ),
+            Expanded(
+              flex: 0,
+              child: Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 15,
+              ),
+            )
+          ],
+        ),
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+        }
+      ),
+    );
+  }
 }
