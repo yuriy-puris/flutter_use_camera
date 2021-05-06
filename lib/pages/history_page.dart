@@ -35,38 +35,131 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 }
 
-class HistoryList extends StatelessWidget {
-  List<DataColumn> columns = [
-    DataColumn(label: Text('Header A')),
-    DataColumn(label: Text('Header B')),
-    DataColumn(label: Text('Header C')),
-    DataColumn(label: Text('Header D')),
+class HistoryList extends StatefulWidget {
+
+  @override
+  _HistoryListState createState() => _HistoryListState();
+}
+
+class _HistoryListState extends State<HistoryList> {
+  static const data = [
+    {
+      "id": 7,
+      "email": "michael.lawson@reqres.in",
+      "first_name": "Michael",
+      "last_name": "Lawson",
+    },
+    {
+      "id": 8,
+      "email": "lindsay.ferguson@reqres.in",
+      "first_name": "Lindsay",
+      "last_name": "Ferguson",
+    },
+    {
+      "id": 9,
+      "email": "tobias.funke@reqres.in",
+      "first_name": "Tobias",
+      "last_name": "Funke",
+    }
   ];
 
-  Widget build(BuildContext context) {
-    return Container(
-        padding: EdgeInsets.all(15),
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.deepPurple[900],
-            Colors.black,
-          ],
-        )),
-        child: ListView(
-          padding: const EdgeInsets.all(2),
-          children: [
-            PaginatedDataTable(
-                horizontalMargin: 10.0,
-                columnSpacing: 10.0,
-                rowsPerPage: 4,
-                columns: columns,
-                source: _HistoryDataSource(context))
-          ],
-        ));
+  Future<void> getData() async {
+    await Future.delayed(Duration(seconds: 3));
+    return data;
   }
+
+  Widget _buildTable(List<Map<String, dynamic>> data) {
+
+    var rows = data
+      .map((e) => TableRow(
+        children: e.entries.map((e) {
+          Widget child;
+          child = Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Text(
+              '${e.value}',
+              style: TextStyle(
+                fontSize: 11,
+              ),
+            ),
+          );
+          return TableCell(child: child);
+        }).toList()
+      ))
+      .toList();
+
+    rows.insert(
+      0,
+      TableRow(
+        children: data.first.entries.map((e) =>
+          TableCell(
+              child: Container(
+                color: Colors.blue,
+                padding: EdgeInsets.all(12),
+                child: Text(
+                  '${e.key.mayusculas}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold
+                  ),
+                ),
+              ),
+            )
+          ).toList()
+      )
+    );
+
+
+    return Table(
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      border: TableBorder.all(
+        color: Colors.white38, 
+        width: 1, 
+        style: BorderStyle.solid
+      ),
+      columnWidths: {
+        0: IntrinsicColumnWidth(),
+      },
+      // defaultColumnWidth: FractionColumnWidth(.1),
+      // defaultColumnWidth: FixedColumnWidth(100),
+      defaultColumnWidth: FlexColumnWidth(),
+      children: rows,
+    );
+  }
+
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: getData(),
+      initialData: null,
+      builder: (context, snapshot) {
+        if (snapshot.data == null) {
+          return Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1,
+                    )),
+              ],
+            ),
+          );
+        } else {
+          print(snapshot.data);
+          List<Map<String, dynamic>> data = List.from(snapshot.data);
+          return Center(
+            child: _buildTable(data)
+          );
+        }
+      }
+    );
+  }
+}
+
+extension ExtStrings on String {
+  get mayusculas => this.replaceAll('_', ' ').toUpperCase();
 }
 
 class HistoryItem {
@@ -75,66 +168,4 @@ class HistoryItem {
   final int count;
   final double price;
   final String date;
-}
-
-class _HistoryDataRow {
-  _HistoryDataRow(
-    this.valueA,
-    this.valueB,
-    this.valueC,
-    this.valueD,
-  );
-
-  final String valueA;
-  final String valueB;
-  final String valueC;
-  final int valueD;
-
-  bool selected = false;
-}
-
-class _HistoryDataSource extends DataTableSource {
-  _HistoryDataSource(this.context) {
-    _rows = <_HistoryDataRow>[
-      _HistoryDataRow('Cell A1', 'CellB1', 'CellC1', 1),
-      _HistoryDataRow('Cell A2', 'CellB2', 'CellC2', 2),
-      _HistoryDataRow('Cell A3', 'CellB3', 'CellC3', 3),
-      _HistoryDataRow('Cell A4', 'CellB4', 'CellC4', 4)
-    ];
-  }
-  final BuildContext context;
-  List<_HistoryDataRow> _rows;
-
-  int _selectedCount = 0;
-
-  @override
-  DataRow getRow(int index) {
-    if (index >= _rows.length) return null;
-    final row = _rows[index];
-    return DataRow.byIndex(
-        index: index,
-        selected: row.selected,
-        onSelectChanged: (value) {
-          if (row.selected != value) {
-            _selectedCount += value ? 1 : -1;
-            row.selected = value;
-            print('onSelected');
-          }
-        },
-        cells: [
-          DataCell(Text(row.valueA)),
-          DataCell(Text(row.valueB)),
-          DataCell(Text(row.valueC)),
-          DataCell(Text(row.valueD.toString())),
-        ]);
-  }
-
-  @override
-  int get rowCount => _rows.length;
-
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get selectedRowCount => _selectedCount;
 }
