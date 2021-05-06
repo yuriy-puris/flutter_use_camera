@@ -28,6 +28,16 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
         ),
         body: Container(
+          padding: EdgeInsets.fromLTRB(15, 15, 15, 15),
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.deepPurple[900],
+              Colors.black,
+            ],
+          )),
           child: Stack(
             children: [HistoryList()],
           ),
@@ -44,22 +54,40 @@ class HistoryList extends StatefulWidget {
 class _HistoryListState extends State<HistoryList> {
   static const data = [
     {
-      "id": 7,
+      "id": 1,
       "email": "michael.lawson@reqres.in",
-      "first_name": "Michael",
-      "last_name": "Lawson",
+      "name": "Michael",
+      "cost": 12.50,
     },
     {
-      "id": 8,
+      "id": 2,
       "email": "lindsay.ferguson@reqres.in",
-      "first_name": "Lindsay",
-      "last_name": "Ferguson",
+      "name": "Lindsay",
+      "cost": 16.50,
     },
     {
-      "id": 9,
+      "id": 3,
       "email": "tobias.funke@reqres.in",
-      "first_name": "Tobias",
-      "last_name": "Funke",
+      "name": "Tobias",
+      "cost": 15.10
+    },
+    {
+      "id": 4,
+      "email": "tobias.funke@reqres.in",
+      "name": "Tobias",
+      "cost": 10.00,
+    },
+    {
+      "id": 5,
+      "email": "tobias.funke@reqres.in",
+      "name": "Tobias",
+      "cost": 8.00,
+    },
+    {
+      "id": 6,
+      "email": "tobias.funke@reqres.in",
+      "name": "Tobias",
+      "cost": 7.50,
     }
   ];
 
@@ -70,16 +98,18 @@ class _HistoryListState extends State<HistoryList> {
 
   Widget _buildTable(List<Map<String, dynamic>> data) {
 
+    // BODY
     var rows = data
       .map((e) => TableRow(
         children: e.entries.map((e) {
           Widget child;
           child = Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6),
+            padding: EdgeInsets.fromLTRB(5, 15, 5, 15),
             child: Text(
               '${e.value}',
               style: TextStyle(
                 fontSize: 11,
+                color: Colors.white
               ),
             ),
           );
@@ -88,17 +118,18 @@ class _HistoryListState extends State<HistoryList> {
       ))
       .toList();
 
+    // HEADER
     rows.insert(
       0,
       TableRow(
         children: data.first.entries.map((e) =>
           TableCell(
               child: Container(
-                color: Colors.blue,
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.fromLTRB(5, 15, 5, 15),
                 child: Text(
                   '${e.key.mayusculas}',
                   style: TextStyle(
+                    color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.bold
                   ),
@@ -110,20 +141,29 @@ class _HistoryListState extends State<HistoryList> {
     );
 
 
-    return Table(
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      border: TableBorder.all(
-        color: Colors.white38, 
-        width: 1, 
-        style: BorderStyle.solid
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [BoxShadow(color: Colors.black54, offset: Offset(0, 7), blurRadius: 10)],
+        borderRadius: BorderRadius.all(Radius.circular(15)),
+        color: Color.fromRGBO(23, 30, 92, 1.0),
       ),
-      columnWidths: {
-        0: IntrinsicColumnWidth(),
-      },
-      // defaultColumnWidth: FractionColumnWidth(.1),
-      // defaultColumnWidth: FixedColumnWidth(100),
-      defaultColumnWidth: FlexColumnWidth(),
-      children: rows,
+      child: Table(
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        border: TableBorder(
+          horizontalInside: BorderSide(width: 1, color: Colors.blue, style: BorderStyle.solid),
+        ),
+        
+        columnWidths: {
+          0: IntrinsicColumnWidth(),
+          1: FlexColumnWidth(1),
+          2: IntrinsicColumnWidth(),
+          3: IntrinsicColumnWidth(),
+        },
+        // defaultColumnWidth: FractionColumnWidth(.1),
+        // defaultColumnWidth: FixedColumnWidth(100),
+        defaultColumnWidth: FlexColumnWidth(),
+        children: rows,
+      )
     );
   }
 
